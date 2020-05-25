@@ -12,9 +12,6 @@ from netCDF4 import Dataset
 import matplotlib.pyplot as plt
 from dateutil.relativedelta import relativedelta
 
-# Import custom libraries
-import data_analysis_lib_v4 as dalib
-
 #############################################################################################################
 ############################################ FINDING PERCENTILES ############################################
 #############################################################################################################
@@ -752,7 +749,7 @@ def track_clusters_and_save(data_path, start_date, end_date, tsteps, lons, lats,
 	var_name = 'clusters'
 	var_info = 'Identified drought clusters from percentiles using a ' + drought_threshold + ' threshold.'
 	fname = data_path + 'drought_clusters_' + dataset + '_' + drought_threshold + '_' + str(start_date.year) + '-' + str(end_date.year) + '.nc'
-	dalib.save_netcdf_file(drought_clusters_matrix, lons, lats, units, var_name, var_info, fname, start_date)
+	save_netcdf_file(drought_clusters_matrix, lons, lats, units, var_name, var_info, fname, start_date)
 
 def find_geo_distance(lon1, lat1, lon2, lat2):
 	''' 
@@ -1234,6 +1231,94 @@ def extract_tracks(cluster_data_dictionary):
 		tracks_dictionary[cluster_ID]['individual_displacements'] = displacements
 
 	return tracks_dictionary
+
+#############################################################################################################
+############################################ CREATE NETCDF FILES ############################################
+#############################################################################################################
+
+def save_netcdf_file(data, lons, lats, units, var_name, var_info, file_name, start_date):
+	'''
+	This function saves the given data into a netcdf file.
+	'''
+
+	# Dimensions
+	nt, _, _ = data.shape
+
+	# Put together data for netcdf file
+	dims = {}
+	dims['lons'] = lons
+	dims['lats'] = lats
+	dims['res'] = lons[1]-lons[0]
+	dims['tres'] = 'months'
+	dims['time'] = np.arange(0,nt)
+	dims['var_units'] = units
+        
+	# Create NetCDF file
+	fp = Create_NETCDF_File(dims, file_name, var_name, var_info, data, start_date)
+
+def Create_NETCDF_File(dims,file,var,var_info,data,tinitial):
+	'''
+	This function creates a netcdf file to save a 3D matrix (t, lat, lon):
+	
+	Arguments:
+	- dims: dictionary that contains the longitudes, latitudes, spatial and temporal resolutiosn, and 
+		number of time steps.
+	- file: the full pat and file name of the netcdf file.
+	- var: the name of the variable to be saved (short)
+	- var_info: the long name and any information on the variable being saved.
+	- data: the 3D data matrix (numpy array)
+	- tinitial: a datetime object with the start date of the data
+
+	Returns
+	- f: netcdf file object created.  
+	'''
+	
+	import netCDF4 as netcdf
+
+	# Extract info
+	lons = dims['lons']
+	lats = dims['lats']
+	res = dims['res']
+	nlon = len(lons)
+	nlat = len(lats)
+	tstep = dims['tres']
+	t = dims['time']
+
+  	#Prepare the netcdf file
+  	# Create file
+  	f = netcdf.Dataset(file, 'w')
+
+  	# Define dimensions
+  	f.createDimension('lon',nlon)
+  	f.createDimension('lat',nlat)
+  	f.createDimension('t',len(t))
+
+  	# Longitude
+  	f.createVariable('lon','d',('lon',))
+  	f.variables['lon'][:] = lons
+  	f.variables['lon'].units = 'degrees_east'
+  	f.variables['lon'].long_name = 'Longitude'
+  	f.variables['lon'].res = res
+
+  	# Latitude
+  	f.createVariable('lat','d',('lat',))
+ 	f.variables['lat'][:] = lats
+	f.variables['lat'].units = 'degrees_north'
+  	f.variables['lat'].long_name = 'Latitude'
+  	f.variables['lat'].res = res
+
+  	# Time
+  	times = f.createVariable('t','d',('t',))
+  	f.variables['t'][:] = t
+  	f.variables['t'].units = '%s since %04d-%02d-%02d %02d:00:00.0' %(tstep,tinitial.year,tinitial.month,tinitial.day,tinitial.hour)
+  	f.variables['t'].long_name = 'Time'
+
+  	# Data
+   	f.createVariable(var,'f',('t','lat','lon'),fill_value=-9.99e+08)
+   	f.variables[var].long_name = var_info
+	f.variables[var][:] = data
+
+	return f
 
 def save_clusters_data_matlab(tracks_dictionary, cluster_data_dictionary, save_path):
 	'''
