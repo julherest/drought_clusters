@@ -1,6 +1,6 @@
 '''
 This script is used to test parallelization of a for-loop process.
-Example mpirun -np 4 python test_parallel.py
+Example: mpirun -np 4 python 02_caculate_drought_clusters_parallel.py
 '''
 # Import library
 import numpy as np
@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from dateutil.relativedelta import relativedelta
 
 # Import custom libraries
-import drought_clusters_lib_v4 as dclib
+import drought_clusters_utils as dclib
 
 #Initiate communicator and determine the core number and number of cores
 comm = MPI.COMM_WORLD
@@ -47,6 +47,9 @@ if reanalysis in ['ERA-Interim', 'NCEP-DOE-R2', 'CFSR']:
 elif reanalysis in ['MERRA2']:
     start_year = 1981
     end_year = 2018
+
+# ** Set boolean variable of whether to treat the right/left edges of the map as periodic
+periodic_bool = True
 
 # ** Path where the percentiles are saved
 percentiles_path = '/oak/stanford/groups/omramom/group_members/jehe/Ocean_Clusters/' + version + '/' + reanalysis + '/' + region + '/' + anomalies_name + '/percentiles_' + reanalysis + '_' + str(start_year) + '-' + str(end_year) + '.nc'
@@ -104,15 +107,11 @@ def find_clusters(chunk):
 	    droughts = dclib.filter_non_droughts(filtered_slice, drought_threshold)
     
 	    # STEP 3: IDENTIFY DROUGHT CLUSTERS PER TIME STEP
-            print 'Rank ' + str(rank+1) + ': Identifying clusters for time step ' + str(int(chunk[i])+1) + ' of ' + str(nsteps) + ' (' + str(i+1) + '/' + str(chunk_length) + ')...'
-	    cluster_count, cluster_dictionary = dclib.find_drought_clusters(droughts, lons, lats, resolution_lon, resolution_lat)
+            print('Rank ' + str(rank+1) + ': Identifying clusters for time step ' + str(int(chunk[i])+1) + ' of ' + str(nsteps) + ' (' + str(i+1) + '/' + str(chunk_length) + ')...')
+	    cluster_count, cluster_dictionary = dclib.find_drought_clusters(droughts, lons, lats, resolution_lon, resolution_lat, periodic_bool)
 
 	    # STEP 4: FILTER DROUGHT CLUSTERS BY AREA AND IF THE CENTROID LIES IN THE SAHARA
-	    droughts, cluster_count, cluster_dictionary = dclib.filter_small_clusters(droughts, cluster_count, cluster_dictionary, area_threshold)
-
-            #plt.imshow(current_data_slice)
-	    #plt.title(current_date)
-	    #plt.show()
+	    droughts, cluster_count, cluster_dictionary = dclib.filter_drought_clusters(droughts, cluster_count, cluster_dictionary, area_threshold)
 
 	    # STEP 5: SAVE THE DROUGHT CLUSTERS FOR CURRENT TIME STEP
 	
@@ -125,7 +124,7 @@ def find_clusters(chunk):
 	    pickle.dump(droughts,open(f_name_slice,"wb"),pickle.HIGHEST_PROTOCOL)
 	    pickle.dump(cluster_dictionary,open(f_name_dictionary,"wb"),pickle.HIGHEST_PROTOCOL)
 	    pickle.dump(cluster_count,open(f_name_count,"wb"),pickle.HIGHEST_PROTOCOL)
-            print 'Rank ' + str(rank+1) + ': Saved data for time step ' + str(int(chunk[i])+1) + ' of ' + str(nsteps) + ' (' + str(i+1) + '/' + str(chunk_length) + ').'
+            print('Rank ' + str(rank+1) + ': Saved data for time step ' + str(int(chunk[i])+1) + ' of ' + str(nsteps) + ' (' + str(i+1) + '/' + str(chunk_length) + ').')
 
         return 
     

@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from dateutil.relativedelta import relativedelta
 
 #############################################################################################################
-############################################ FINDING PERCENTILES ############################################
+######################################### DATA PRE-PROCESSING TOOLS #########################################
 #############################################################################################################
     
 def percentiles_from_Weibull(data_array):
@@ -131,7 +131,7 @@ def obtain_percentiles_matrix(data_matrix):
 	return percentile_matrix
 
 #############################################################################################################
-############################################ APPLY MEDIAN FILTER  ###########################################
+####################################### IDENTIFYING DROUGHT CLUSTERS  #######################################
 #############################################################################################################
 
 def median_filter(data_matrix):
@@ -181,13 +181,11 @@ def median_filter(data_matrix):
 				# Mask any nans that might have been picked up
 				window_values = np.array(window_values)
 				window_values = window_values[~np.isnan(window_values)]
-				#window_values = np.ma.masked_where(np.isnan(window_values), window_values)
 
 				# Check if grid cell is isolated, otherwise apply filter
 				if len(window_values) == 0:
 					filtered_matrix[i,j] = data_matrix[i,j]
 				else:
-					#print window_values, np.median(window_values)
 					filtered_matrix[i,j] = np.median(window_values)			
 			else:
 			
@@ -195,14 +193,10 @@ def median_filter(data_matrix):
 
 	return filtered_matrix	
 
-#############################################################################################################
-######################################### IDENTIFY DROUGHT CLUSTERS  ########################################
-#############################################################################################################
-
 def filter_non_droughts(data_matrix, threshold):
 	''' 
 	This function will filter out all pixels in a map that are above the given
-	threshold. It will not, however, filter out small drought events.
+	threshold. 
 
 	Argument:
 	- data_matrix: 2D matrix (lat, lon) of (smoothed) percentile values for a given time step.
@@ -212,6 +206,8 @@ def filter_non_droughts(data_matrix, threshold):
 	- droughts_matrix: 2D matrix of the same dimensions and orientation as the input matrix but where 
 		            all the grid cells that have values above the threshold are filtered out.
 	'''
+
+        # Ignore floating-point errors
 	np.seterr(invalid='ignore')
 
 	# Make copy of data matrix
@@ -223,7 +219,7 @@ def filter_non_droughts(data_matrix, threshold):
 
 	return droughts_matrix
 
-def check_drought_in_surroundings(current_pixel, linked_indices, data_matrix):
+def check_drought_in_surroundings(current_pixel, linked_indices, data_matrix, periodic_bool):
 	'''
 	This function will look around the neighbouring cells for a pixel under drought and return their indices.
 
@@ -231,6 +227,9 @@ def check_drought_in_surroundings(current_pixel, linked_indices, data_matrix):
 	- current_pixel: Coordinates of the pixel/gridcell of interest
 	- linked_indices: List of all the coordinates of gridcells/pixes that have been identified as being under drought.
 	- data_matrix: 2D matrix for the given time step from where the gridcells under drought have been identified.
+        - periodic_bool: Boolean variable, True if we want to treat the left/right edges of the array as periodic (e.g. if
+            we are calculating clusters over a global map), False otherwise (e.g. if we are identifying clusters within a 
+            smaller region).
 
 	Returns:
 	- surrounding_drought_pixels: list of pixels directly surrounding the current_pixel that are also under drought. 
@@ -248,16 +247,18 @@ def check_drought_in_surroundings(current_pixel, linked_indices, data_matrix):
         # Coordinates we will check
 	for x,y in [(n+i,m+j) for i in (-1,0,1) for j in (-1,0,1) if i != 0 or j != 0]:
 
+            if periodic_bool:
+                
                 # Check around the left and right edges to allow for continuity of a cluster
                 if y < 0:
                     y = nlons-1
                 elif y > nlons-1:
                     y = 0
  
-		# If it is under drought, add it to the list
-		if (x,y) in linked_indices:
-			surrounding_drought_pixels.append((x,y))
-			value = data_matrix[x,y]
+	    # If it is under drought, add it to the list
+	    if (x,y) in linked_indices:
+		    surrounding_drought_pixels.append((x,y))
+		    value = data_matrix[x,y]
         
 	return surrounding_drought_pixels
 
@@ -266,8 +267,8 @@ def find_gridcell_area(center_lon, center_lat, resolution_lon, resolution_lat):
 	This function finds the area of an individual grid cell on a sphere.
 
 	Argument:
-	- center_lon: Longitude at the center of the grid cell
-	- center_lat: Latitude at the center of the grid cell
+	- center_lon: Longitude at the center of the grid cell in degrees
+	- center_lat: Latitude at the center of the grid cell in degrees
 	- resolution_lon, resolution_lat: Resolution of the dataset in the longitudinal and latitudinal directions (e.g. 0.5 degrees)
 
 	Returns:
@@ -333,17 +334,19 @@ def find_cluster_area(coordinates, lons, lats, resolution_lon, resolution_lat):
 def find_weighed_centroid(lats_array, lons_array, intensities, lons, lats):
 	'''
 	This function finds the centroid of the cluster from the given coordinates of each drought pixel. The
-	centroid is weighed using the intensities (1 - percentile values) of each pixel such that the centroid is 
-	closer to or located at the most intense part of the drought cluster.
+	centroid is weighed using the intensities-related matric (1 - percentile values) of each pixel such that
+        the centroid is closer to or located at the most intense part of the drought cluster (i.e. with lower 
+        percentile values).
 	
 	Argument:
-	- lats_array: 1D array of the latitudes of each gridcell contained in the drought cluster.
-	- lons_array: 1D array of the longitudes of each gridcell contained in the drought cluster.
+	- lats_array: 1D array of the latitudes in degrees of each gridcell contained in the drought cluster.
+	- lons_array: 1D array of the longitudes in degrees of each gridcell contained in the drought cluster. 
+            These must be in the form (-180,180) and NOT in the form (0, 360)
 	- intensities: 1D array with the intensities for each gridcell contained in the drought cluster.
 
 	Return:
-	- centroid_lat: Latitude of the cluster centroid.
-	- centroid_lon: Longitude of the cluster centroid. 
+	- centroid_lat: Latitude in degrees of the cluster centroid.
+	- centroid_lon: Longitude in degrees of the cluster centroid. 
 	'''
         	
 	# Number of pixels in cluster
@@ -379,7 +382,8 @@ def find_weighed_centroid(lats_array, lons_array, intensities, lons, lats):
                             else:
                                 flag = 'wrapped_complex'    
 
-                    elif len(np.where(hist==0)[0]) > 0:   
+                    elif len(np.where(hist==0)[0]) > 0: 
+                        
                             # It's not a polar cluster, it's just wrapped around the Pacific
                             flag = 'wrapped'
 
@@ -403,7 +407,7 @@ def find_weighed_centroid(lats_array, lons_array, intensities, lons, lats):
                 
             elif flag == 'wrapped_complex':
                 
-                # Find the lattitude with the narrowest gap
+                # Find the latitude with the narrowest gap
                 idx_lat = np.argmax(sum_hist)
                 
                 # Find all the zero instances for this latitude
@@ -426,30 +430,22 @@ def find_weighed_centroid(lats_array, lons_array, intensities, lons, lats):
             else:
                 centroid_lon = centroid_lon_temp + lon_shift
 
-        #if flag == 'wrapped':
-        #    plt.subplot(1,3,1); plt.bar(np.arange(len(hist)),hist)
-        #    plt.subplot(1,3,2); plt.scatter(lons_array,lats_array); plt.scatter(centroid_lon, centroid_lat, color ='red')
-        #    plt.subplot(1,3,3); plt.scatter(lons_array_temp,lats_array); plt.scatter(centroid_lon_temp, centroid_lat, color ='red')
-        #    plt.show()
-        #if flag == 'polar':
-        #    plt.subplot(1,3,1); plt.bar(np.arange(len(hist)),hist)
-        #    plt.subplot(1,3,2); plt.scatter(lons_array,lats_array); plt.scatter(centroid_lon, centroid_lat, color ='red')
-        #    plt.subplot(1,3,3); plt.imshow(hist2d, interpolation = 'nearest', extent=[lons_edges[0], lons_edges[-1], lats_edges[0], lats_edges[-1]], aspect='auto', origin = 'lower')
-        #    plt.show()
-
 	return centroid_lat, centroid_lon 
 
-def find_drought_clusters(data_matrix, lons, lats, resolution_lon, resolution_lat):
+def find_drought_clusters(data_matrix, lons, lats, resolution_lon, resolution_lat, periodic_bool):
 	'''
 	This function will find the individual drought clusters for a given time step. Drought clusters
-	are defined as spatially contiguous areas under drought. This algorithm was inspired by the 
-	Andreadis et al. (2005).
+	are defined as spatially contiguous areas under drought. This algorithm was inspired by the algorithm 
+	describied in Andreadis et al. (2005), Journal of Hydrometeorology.
  
 	Arguments:
 	- data_matrix: 2D matrix for a given time step with the non-drought pixels filtered out.
-	- lons: 1D array of longitudes for the data_matrix
-	- lats: 1D array of latitudes for the data_matrix
+	- lons: 1D array of longitudes in degrees for the data_matrix. These must be in the form (-180,180) and NOT in the form (0, 360)
+	- lats: 1D array of latitudes in degrees for the data_matrix
 	- resolution_lon, resolution_lat: Resolution of the dataset in the longitudinal and latitudinal directions (e.g. 0.5 degrees)
+        - periodic_bool: Boolean variable, True if we want to treat the left/right edges of the array as periodic (e.g. if
+            we are calculating clusters over a global map), False otherwise (e.g. if we are identifying clusters within a 
+            smaller region).
 
 	Returns:
 	- cluster_count: Number of drought clusters above the area threshold identified for the current 
@@ -509,7 +505,7 @@ def find_drought_clusters(data_matrix, lons, lats, resolution_lon, resolution_la
 				for current_pixel in additions_to_check:
 			
 					# Finding those pixels surrounding the current pixel that are also under drought
-					positive_matches = check_drought_in_surroundings(current_pixel, linked_indices, data_matrix)
+					positive_matches = check_drought_in_surroundings(current_pixel, linked_indices, data_matrix, periodic_bool)
 
 					# Check there was at least one positive match
 					if len(positive_matches) > 0:
@@ -580,8 +576,8 @@ def cluster_in_Sahara(centroid_lon, centroid_lat):
 	during the current time step.
 
 	Argument:
-	- centroid_lat: Latitude of the cluster centroid.
-	- centroid_lon: Longitude of the cluster centroid.
+	- centroid_lat: Latitude in degrees of the cluster centroid.
+	- centroid_lon: Longitude in degrees of the cluster centroid.
 
 	Returns:
 	- Boolean variable False if the centroid does not fall in the Sahara desert and True otherwise.
@@ -592,12 +588,12 @@ def cluster_in_Sahara(centroid_lon, centroid_lat):
 	else:
 		return False
 
-def filter_small_clusters(data_matrix, cluster_count, cluster_dictionary, area_threshold):
+def filter_drought_clusters(data_matrix, cluster_count, cluster_dictionary, area_threshold):
 	'''
-	This function will take in all the drought clusters and delete those that are smaller
+	This function will take in all the drought clusters and remove those that are smaller
 	than the given area threshold. If a drought cluster does not meet the critertion
 	then they will be deleted from the drought field. Drought clusters whose centroids fall within
-	the Sahara desert are also deleted. This function works using the dictionary of the 
+	the Sahara desert are also removed. This function works using the dictionary created by the 
 	find_drought_clusters function.
 
 	Argument:
@@ -717,7 +713,8 @@ def load_drought_cluster_data(data_path, start_date, tsteps, nlons, nlats):
 
 def track_clusters_and_save(data_path, start_date, end_date, tsteps, lons, lats, drought_threshold, dataset):
 	'''
-	This function implements the tracking algorithm for the drought clusters.
+	This function implements the tracking algorithm for the drought clusters and saves the resulting
+        array of tracked clusters and a dictionary with all the characteristics for each tracked cluster.
 	
 	Arguments:
 	- data_path: Path where the clusters data was saved to
@@ -737,7 +734,6 @@ def track_clusters_and_save(data_path, start_date, end_date, tsteps, lons, lats,
 	drought_clusters_matrix, drought_clusters_dictionary = load_drought_cluster_data(data_path, start_date, tsteps, nlons, nlats)
 
 	# Tracking the clusters
-	#drought_clusters_matrix = drought_clusters_matrix[0:tsteps,:,:]
 	cluster_data_dictionary = track_clusters(drought_clusters_dictionary, drought_clusters_matrix, start_date, end_date)
 
 	# Saving the tracked clusters
@@ -947,7 +943,7 @@ def track_clusters(drought_cluster_dictionary, drought_matrix, start_date, end_d
 				
 				# Add this cluster to the list of clusters in the next time step
 				cluster_data_dictionary[next_date].append(cluster_ID_count)
-				print next_date, '[Appear]: Cluster ' + str(cluster_ID_count) + ' appeared.'
+				print(next_date, '[Appear]: Cluster ' + str(cluster_ID_count) + ' appeared.')
 				
 			elif nclusters > 0:
 	
@@ -1026,14 +1022,14 @@ def track_clusters(drought_cluster_dictionary, drought_matrix, start_date, end_d
 							if clusters_to_link[j] == largest_cluster:
 
 								# Record merging event
-								print next_date, '[Merger]: Cluster ' + str(largest_cluster) + ' continues on'
+								print(next_date, '[Merger]: Cluster ' + str(largest_cluster) + ' continues on')
 
 							elif clusters_to_link[j] != largest_cluster:
 
 								# Append geneology for the other clusters that merged into the largest one found above
 								cluster_data_dictionary[clusters_to_link[j]]['parent_of'].append(largest_cluster)
 								cluster_data_dictionary[largest_cluster]['child_of'].append(clusters_to_link[j])
-								print next_date, '[Merger]: Cluster ' + str(clusters_to_link[j]) + ' merged into ' + str(largest_cluster)
+								print(next_date, '[Merger]: Cluster ' + str(clusters_to_link[j]) + ' merged into ' + str(largest_cluster))
 
 							# Record merging event 
 							cluster_data_dictionary[clusters_to_link[j]]['merging_events'].append(i+1)
@@ -1054,14 +1050,14 @@ def track_clusters(drought_cluster_dictionary, drought_matrix, start_date, end_d
 				# Record time of event				
 				cluster_data_dictionary[cluster_ID]['splitting_events'].append(i+1)
 				cluster_data_dictionary[cluster_ID]['splitting_events_by_date'].append(next_date)
-				print next_date, '[Split]: Cluster ' + str(cluster_ID) + ' split into ' + str(nclusters) + ' clusters.'
+				print(next_date, '[Split]: Cluster ' + str(cluster_ID) + ' split into ' + str(nclusters) + ' clusters.')
 
 			# Also record end dates of merged clusters
 			if cluster_ID not in cluster_data_dictionary[next_date]:
 				
 				# Record their ending
 				cluster_data_dictionary[cluster_ID]['end'] =  t_idx
-				print next_date, '[Disappear]: Cluster ' + str(cluster_ID) + ' disappeared or merged.'
+				print(next_date, '[Disappear]: Cluster ' + str(cluster_ID) + ' disappeared or merged.')
 	
 		# Tie loose ends 
                 if next_date.year == end_date.year and next_date.month == end_date.month:
@@ -1179,7 +1175,7 @@ def extract_tracks(cluster_data_dictionary):
 
 	# Find the number of clusters
 	nclusters = cluster_data_dictionary['cluster_count']
-	print 'Number of clusters:', nclusters
+	print('Number of clusters:', nclusters)
 
 	# Initialize dictionary where the data will be saved 
 	tracks_dictionary = {}
@@ -1319,6 +1315,10 @@ def Create_NETCDF_File(dims,file,var,var_info,data,tinitial):
 	f.variables[var][:] = data
 
 	return f
+
+#############################################################################################################
+############################################ MISCELLANEOUS TOOLS ############################################
+#############################################################################################################
 
 def save_clusters_data_matlab(tracks_dictionary, cluster_data_dictionary, save_path):
 	'''
