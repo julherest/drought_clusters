@@ -1,10 +1,8 @@
 '''
-This script processes the output of the drought cluster identification algorithm carried out by the script named calculate_drought_clusters_parallel_v2.py 
-if the identification was done in parallel or or calculate_drought_clusters_series_v2.py otherwise. This script needs to be run once for each of the 
-reanalysis datasets used. The dictionaries produced by this script will then be further analyzed by the script named paper_figures_multiple_v2.py
-to produce the results and figures to be used in the manuscript.
+This script processes the output of the drought cluster identification algorithm carried out by the script named 02_calculate_drought_clusters_parallel.py.
+This script only needs to be run once needs to be run once. 
 
-Credit: Julio E. Herrera Estrada, Stanford University, 2019. E-mail: jehe@stanford.edu
+Written by Julio E. Herrera Estrada
 '''
 
 # Import Python libraries
@@ -16,8 +14,7 @@ import matplotlib.pyplot as plt
 from dateutil.relativedelta import relativedelta
 
 # Import custom libraries
-import paper_calculations_lib_v4 as pclib
-import drought_clusters_lib_v4 as dclib
+import drought_clusters_utils as dclib
 
 # ** Name of the reanalysis dataset to process (options: "ERA-Interim", "MERRA2", "CFSR", "NCEP-DOE-R2")
 reanalysis = 'CFSR'
@@ -66,7 +63,7 @@ duration_threshold = 3
 #################################### LOAD DATA ###################################
 ##################################################################################
 
-print 'Processing data for ' + reanalysis + ', version: ' + version, ', window:', window, ', threshold:', drought_threshold
+print('Processing data for ' + reanalysis + ', version: ' + version, ', window:', window, ', threshold:', drought_threshold)
 
 # Start and end date and number of time steps in between
 start_date = datetime(start_year,1,1)
@@ -79,20 +76,7 @@ mask = f.variables['lsm'][:]
 lons = f.variables['lon'][:]
 lats = f.variables['lat'][:]
 f.close()
-print 'Land-sea mask loaded'
-
-# Resolution of dataset in the longitudes and latitudes
-resolution_lon = np.mean(lons[1:]-lons[:-1])
-resolution_lat = np.mean(lats[1:]-lats[:-1])
-
-# Load normalized P-E cumulative anomalies (Begin one year later for ERA-Interim and CFSR)
-f = Dataset(norm_cumulative_anomalies_path)
-if reanalysis in ['ERA-Interim', 'CFSR']:
-    normalized_anomalies = f.variables['pme'][12:,:,:]
-else:
-    normalized_anomalies = f.variables['pme'][:]
-f.close()
-print 'Normalized anomalies are loaded'
+print('Land-sea mask loaded')
 
 ##################################################################################
 ################ EXTRACT INFORMATION ON THE DROUGHT CLUSTER TRACKS ###############
@@ -100,24 +84,9 @@ print 'Normalized anomalies are loaded'
 
 # Track drought clusters through time (Note: only need to run once after calculating drought clusters)
 dclib.track_clusters_and_save(clusters_path, start_date, end_date, nt, lons, lats, drought_threshold_name, reanalysis)
-print 'Done tracking the clusters.'
+print('Done tracking the clusters.')
 
 # Open dictionary of drought clusters
 cluster_data_dictionary = pickle.load(open(clusters_path + 'tracked_clusters_dictionary_' + str(start_date.year) + '-' + str(end_date.year) + '.pck',"rb"))
 
-# Extract tracks
-tracks_dictionary = dclib.extract_tracks(cluster_data_dictionary)
-
-##################################################################################
-########################### CLASSIFY DROUGHT CLUSTERS ############################
-##################################################################################
-
-# Create dictionary of landfalling drought clusters and save
-bool_save = True
-pclib.classify_drought_clusters(cluster_data_dictionary, tracks_dictionary, clusters_path, lons, lats, duration_threshold, land_area_threshold, mask, normalized_anomalies, start_date, end_date, resolution_lon, resolution_lat, bool_save)    # Calculate and save
-dictionary_cluster_classification = pickle.load(open(clusters_path + 'classified_drought_clusters_' + str(start_date.year) + '-' + str(end_date.year) + '.pck',"rb")) # Load
-print 'Classification dictionary has been loaded.'
-
-# Verify that all the clusters were sorted correctly
-pclib.check_cluster_classification(dictionary_cluster_classification, land_area_threshold)
-print 'Doneso!'
+print('Doneso!')

@@ -1,7 +1,13 @@
 '''
-This script is used to test parallelization of a for-loop process.
-Example: mpirun -np 4 python 02_caculate_drought_clusters_parallel.py
+This script is used to identify 2D drought clusters for each time step separately. It parallelizes the for-loop through the
+different time steps using mpi4py.
+
+Here is an example of how this code should be run: 
+mpirun -np 4 python 02_caculate_drought_clusters_parallel.py
+
+Written by Julio E. Herrera Estrada
 '''
+
 # Import library
 import numpy as np
 from mpi4py import MPI
