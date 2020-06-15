@@ -46,16 +46,14 @@ Once the drought clusters have been identified for every time step, the user can
 - `tracked_clusters_dictionary_' + str(start_date.year) + '-' + str(end_date.year) + '.pck`: A pickled file containing the dictionary with the characteristics of all the drought clusters tracked through time.
 
 The structure of the `tracked_clusters_dictionary_' + str(start_date.year) + '-' + str(end_date.year) + '.pck` is as follows:
-```
-cluster_data_dictionary[cluster_ID]['start']: Datetime object with the start date of the cluster identified by `cluster_ID` (where `cluster_ID` is an integer)
-cluster_data_dictionary[cluster_ID]['end']: Datetime object with the end date of the cluster identified by `cluster_ID`
-cluster_data_dictionary[cluster_ID]['parent_of']: List with the IDs of clusters that resulted from this cluster (e.g. if this cluster split into 2+ clusters)
-cluster_data_dictionary[cluster_ID_count]['child_of']: List with the IDs of clusters that produced this cluster (e.g. if a cluster split into 2+ clusters or 2+ clusters merged into the current one)
-cluster_data_dictionary[cluster_ID]['splitting_events']: List of indices corresponding to the array `range(0, nsteps)` recording all the times that this cluster split into 2+ clusters
-cluster_data_dictionary[cluster_ID]['splitting_events_by_date']: List of datetime objects recording the instances when this cluster split into 2+ clusters
-cluster_data_dictionary[cluster_ID]['merging_events']: List of indices corresponding to the array `range(0, nsteps)` recording the instances when this cluster merged with another cluster
-cluster_data_dictionary[cluster_ID_count]['merging_events_by_date']: List of datetime objects recording the instances when this cluster merged with another cluster
-```
+`cluster_data_dictionary[cluster_ID]['start']`: Datetime object with the start date of the cluster identified by `cluster_ID` (where `cluster_ID` is an integer)
+`cluster_data_dictionary[cluster_ID]['end']`: Datetime object with the end date of the cluster identified by `cluster_ID`
+`cluster_data_dictionary[cluster_ID]['parent_of']`: List with the IDs of clusters that resulted from this cluster (e.g. if this cluster split into 2+ clusters)
+`cluster_data_dictionary[cluster_ID_count]['child_of']`: List with the IDs of clusters that produced this cluster (e.g. if a cluster split into 2+ clusters or 2+ clusters merged into the current one)
+`cluster_data_dictionary[cluster_ID]['splitting_events']`: List of indices corresponding to the array `range(0, nsteps)` recording all the times that this cluster split into 2+ clusters
+`cluster_data_dictionary[cluster_ID]['splitting_events_by_date']`: List of datetime objects recording the instances when this cluster split into 2+ clusters
+`cluster_data_dictionary[cluster_ID]['merging_events']` = List of indices corresponding to the array `range(0, nsteps)` recording the instances when this cluster merged with another cluster
+`cluster_data_dictionary[cluster_ID_count]['merging_events_by_date']`: List of datetime objects recording the instances when this cluster merged with another cluster
 
 Further, each `cluster_data_dictionary[cluster_ID]` entry also includes keys of datetime objects corresponding the the dates when this cluster existed. These datetime keys 'unlock' a dicionary that contains the characteristics of the drought cluster at that point in time. For example, for a date `current_date`, the structure of ththe dictionary with the characteristics is as follows: 
 - `cluster_data_dictionary[cluster_ID][current_date]['area']`: Float number of the area of the drought cluster in km^2
