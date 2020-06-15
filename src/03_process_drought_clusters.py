@@ -6,11 +6,11 @@ Written by Julio E. Herrera Estrada, Ph.D.
 '''
 
 # Import Python libraries
+import pyyaml
 import numpy as np
 import cPickle as pickle
 from netCDF4 import Dataset
 from datetime import datetime
-import matplotlib.pyplot as plt
 from dateutil.relativedelta import relativedelta
 
 # Import custom libraries
