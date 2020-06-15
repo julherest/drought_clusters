@@ -1,0 +1,40 @@
+--- 
+# This file contains all the definitions needed to identify and track drought clusters
+
+# Name of the dataset used to calculate gridded drought metric (must not contain spaces) -- will be used to organize paths
+dataset: MERRA2
+
+# Region where this analysis is carried out (must not contain spaces) -- will be used to organize paths
+region: Global
+
+# Name of the drought metric (must not contain spaces) -- will be used to organize paths
+drought_metric: precipitation_percentiles
+
+# Path and file name of the NetCDF file with the drought metric (include '.nc')
+drought_metric_path: ''
+drought_metric_file_name: ''
+
+# Names of the variables in the NetCDF file with the drought metric
+lat_var: lat
+lon_var: lon
+metric_var: percentiles
+
+# Start and end years for the drought metric
+start_year: 1980
+end_year: 2018
+
+# Threshold for drought definition (if using percentiles, 0.2 corresponds to 20th percentile)
+drought_threshold: 0.2
+
+# Threshold for minimum cluster area (km^2)
+minimum_area_threshold: 10000.	
+
+# Set boolean variable of whether to treat the right/left edges of the map as periodic
+periodic_bool: True
+
+# Path to the directory where the drought clusters will be saved
+# The full path where the clusters will be saved is recommended to take the following order:
+#       clusters_full_path = clusters_partial_path/dataset/region/drought_metric/drought_threshold/
+# This will allow for easy organization if clusters are calculated for multiple datasets,
+# regions, variables, and drought thresholds.
+clusters_partial_path: ''
