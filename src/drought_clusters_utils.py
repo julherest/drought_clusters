@@ -1,15 +1,15 @@
 '''
 This file contains the functions needed to calculate, track, and analyze the drought clusters.
+
+Written by Julio E. Herrera Estrada, Ph.D.
 '''
 
-# Import Python libraries
-import scipy
+# Import libraries
 import numpy as np
 import cPickle as pickle
-from scipy import stats
-from datetime import date
 from netCDF4 import Dataset
-import matplotlib.pyplot as plt
+from calendar import monthrange
+from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 
 #############################################################################################################
@@ -789,11 +789,7 @@ def track_clusters(drought_cluster_dictionary, drought_matrix, start_date, end_d
 	Returns:
 	- cluster_data_dictionary: Dictionary with the information of all the clusters tracked across time.
 	'''
-
-	# Import library
-	import datetime
-	from datetime import date
-
+	
 	# Make copy of 3D matrix containing the filtered droughts
 	drought_matrix_copy = np.array(drought_matrix[:])
 
@@ -1150,8 +1146,7 @@ def monthdelta(d1, d2):
 	'''
 	This function calculates the difference in months between two dates.
 	'''
-	from calendar import monthrange
-	from datetime import datetime, timedelta
+	
     	delta = 0
     	while True:
 		mdays = monthrange(d1.year, d1.month)[1]
