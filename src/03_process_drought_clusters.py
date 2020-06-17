@@ -1,6 +1,9 @@
 '''
-This script processes the output of the drought cluster identification algorithm carried out by the script named 02_calculate_drought_clusters_parallel.py.
-This script only needs to be run once needs to be run once. 
+This script processes the output of the drought cluster identification algorithm 
+carried out by the script named 02_calculate_drought_clusters_parallel.py.
+
+This script only needs to be run once and it will save the dictionary with all the 
+drought clusters' data that we can then go and analyze.. 
 
 Written by Julio E. Herrera Estrada, Ph.D.
 '''
