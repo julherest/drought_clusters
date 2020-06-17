@@ -64,8 +64,8 @@ end_date = start_date + relativedelta(months=nt-1)
 
 # Load coordinates
 f = Dataset(drought_metric_path + drought_metric_file_name)
-lons = f.variables['lon_var'][:]
-lats = f.variables['lat_var'][:]
+lons = f.variables[lon_var][:]
+lats = f.variables[lat_var][:]
 f.close()
 
 # Track drought clusters through time (Note: only need to run once after calculating drought clusters)
