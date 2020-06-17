@@ -1,7 +1,7 @@
 # Identifying and tracking droughts through space and time
 
 ## Summary
-The code in this repository can be used to identify and track drought clusters, allowing the user to study the characteristics and behaviors of droughts in space and time within a given region or globally. This code is intended to be use for analyzing gridded datasets (e.g. reanalyses, climate model outputs) and not over point-observations. 
+The code in this repository can be used to identify and track drought clusters from monthly data, allowing the user to study the characteristics and behaviors of droughts in space and time within a given region or globally. This code is intended to be use for analyzing gridded datasets (e.g. reanalyses, climate model outputs) and not over point-observations. 
 
 The code is found under the `src` directory and contains the following files:
 - `definitions.yaml`: This YAML file contains all the definitions, parameters, and paths needed to run the `02_calculate_drought_clusters_parallel.py` and `03_process_drought_clusters.py` scripts. The user will need edit this file, at least to add the paths where the drought metric data is saved and where the drought cluster files will be saved.
@@ -15,11 +15,11 @@ For further information on the algorithm, please read the references provided in
 ## 1. Data pre-processing
 Prior to identifying and tracking drought clusters using this code, the user needs to create a NetCDF file that contains a 3D array (time, lat, lon) that contains the gridded, normalized drought metric to use. Further, the longitudinal coordinates must be given in the form (-180, 180) instead of (0, 360). 
 
-This code was initially written to analyze percentiles of soil moisture in Herrera-Estrada et al. (2017) and later used to analyze percentiles of 12-month cumulative anomalies of precipitation-minus-evaporation in Herrera-Estrada and Diffenbaugh, *under review*.
+The clustering code in this repository was initially written to analyze percentiles of soil moisture in Herrera-Estrada et al. (2017) and later used to analyze percentiles of 12-month cumulative anomalies of precipitation-minus-evaporation in Herrera-Estrada and Diffenbaugh, *under review*.
 
-The `01_data_preprocessing.py` provides an example of how the user may calculate these percentiles using sample data from the Modern-Era Retrospective Analysis for Research and Applications version 2 (MERRA2), a reanalysis dataset produced by NASA. 
+The `01_data_preprocessing.py` provides an example of how the user may calculate percentiles of cumulative anomalies of precipitation minus evaporation using sample data from the Modern-Era Retrospective Analysis for Research and Applications version 2 (MERRA2), a reanalysis dataset produced by NASA. This script assumes that user has saved separate NetCDF files with the precipitation and evaporation from the reanalysis. The user will need to pass on the paths where these files are saved.
 
-However, the user can apply this clustering algorithm to other reanalysies datasets (e.g. ECMWF's ERA5), as well as climate model simulations (e.g. CMIP6). Further, the user can also identify and track drought clusters based on more traditional drought indices such as SPI, PDSI, and SPEI so long as they are provided as a gridded product. Note that the user may need to make slight adjustments to the names of the variables in the NetCDF file with the drought metric to make sure the coordinates and the metric are loaded correctly.
+The user can apply this clustering algorithm to other reanalysies datasets (e.g. ECMWF's ERA5), as well as climate model simulations (e.g. CMIP6). Further, the user can also identify and track drought clusters based on more traditional drought indices such as SPI, PDSI, and SPEI so long as they are provided as a gridded product. Note that the user may need to make slight adjustments to the names of the variables in the NetCDF file with the drought metric to make sure the coordinates and the metric are loaded correctly.
 
 ## 2. Identifying drought clusters in 2D
 Once the user has created the NetCDF file with the 3D array (time, lat, lon) containing the gridded and normalized drought metric, the user can run the `02_calculate_drought_clusters_parallel.py` file to identify the 2D drought clusters in every time step (we will join the drought clusters through time in the next step). This file has been designed to run in parallel using the `mpi4py` Python library, so the user must make sure that they have this library and required dependencies installed.
