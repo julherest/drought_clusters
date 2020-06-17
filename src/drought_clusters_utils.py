@@ -15,7 +15,71 @@ from dateutil.relativedelta import relativedelta
 #############################################################################################################
 ######################################### DATA PRE-PROCESSING TOOLS #########################################
 #############################################################################################################
-    
+
+def calculate_anomalies_matrix(data_matrix):
+        '''
+        This function calculates monthly anomalies from the given 3D matrix. Assumes the data starts in January.
+
+        Arguments:
+        - data_matrix = 3D NumPy array (time, lats, lons) with the data from which we want to calculate anomalies
+
+        Returns:
+        - anomalies = 3D NumPy array (time, lats, lons) with the calculated anomalies
+        '''
+
+        # Dimensions of data
+        nt, nlats, nlons = data_matrix.shape
+
+        # Initialize array to save cumulative anomalies
+        anomalies = np.zeros([nt, nlats, nlons])
+        
+        # Calculate anomalies
+        month_idx = 0
+        for i in range(0, nt):
+            
+            # Index of current months
+            idx = np.arange(month_idx,nt,12)
+
+            # Subtract monthly means from current value
+            anomalies[i,:,:] = data_matrix[i,:,:] - np.nanmean(data_matrix[idx,:,:], axis = 0)
+
+            # Update month index
+            if month_idx == 11: # December given start at 0
+                month_idx = 0
+            else:
+                month_idx = month_idx + 1
+
+        return anomalies
+
+def calculate_cumulative_anomalies_matrix(anomalies, window):
+        '''
+        This function calculates the cumulative anomalies over a given window from the anomalies array.
+        We assume the data starts on January. 
+
+        Arguments:
+        - anomalies: 3D NumPy array (time, lats, lons) with the monthly anomalies.
+        - window: Integer of the accumulation period to use in months
+
+        Returns:
+        - cumulative_anomalies: 3D NumPy array (time, lats, lons) with the cumulative anomalies. Note
+            that because of the accumulation period, this array will start the following January.
+        '''
+
+        # Dimensions of data
+        nt, nlats, nlons = anomalies.shape
+
+        # Initialize array to save cumulative anomalies
+        cumulative_anomalies = np.zeros([nt-window, nlats, nlons])
+
+        # Calculate cumulative anomalies 
+        for i in range(window, nt):
+            cumulative_anomalies[i-window,:,:] = np.nansum(anomalies[i-window:i,:,:],0)
+
+        # Crop data to start in January of the next year
+        cumulative_anomalies = cumulative_anomalies[12-window:,:,:]
+
+        return cumulative_anomalies
+
 def percentiles_from_Weibull(data_array):
 	'''
 	This function takes in a 1D time series and uses the Weibull plotting positions
@@ -79,25 +143,16 @@ def find_percentiles_single_month(data_array):
 
 	return percentiles_array
 
-def find_percentiles_all_data(data_array):
-        '''
-        This function replaces each value for the respective percentile where the whole data is used
-        to calculate the distribution, as opposed to only using data for a respective set of months.
-        '''
-
-        # Calculate percentiles from data of the three time steps
-	percentiles_array = percentiles_from_Weibull(data_array)
-	    
-        return percentiles_array
-
-def obtain_percentiles_matrix(data_matrix):
+def calculate_percentiles_matrix(data_matrix, seasonality_bool):
 	'''
-	This function will take in the full 3D matrix of data (e.g. soil moisture) in the form 
-	(time, lat, lon) and create a similar matrix with each value replaced by its respective 
-	percentile according to the Weibull position.
+	This function will take in the full 3D matrix of data (e.g. soil moisture or cumulative anomalies
+        of precipitation minus evaporation) in the form (time, lat, lon) and create a similar matrix with
+        each value replaced by its respective percentile according to the Weibull position.
 	
 	Argument:
 	- data_matrix: 3D matrix of original data (e.g. soil moisture) in the form (time, lat, lon)
+        - seasonality_bool: Boolean variable. True if the input data has seasonality. False if the seasonality 
+            has been removed (e.g. by calculating anomalies)
 
 	Returns:
 	- percentile_matrix: 3D matrix of the same dimensions and orientation as the input matrix,
@@ -114,19 +169,21 @@ def obtain_percentiles_matrix(data_matrix):
 	for i in range(0, nlat):
 		for j in range(0, nlon):
 				
-			# Current grid cell's data
-			current_data = data_matrix[:,i,j]
+		    # Current grid cell's data
+		    current_data = data_matrix[:,i,j]
 
-			# Find percentiles
-                        if np.isnan(np.mean(current_data)) == False:
-			    #percentile_array = find_percentiles_single_month(current_data) # This is for data with seasonality
-                            percentile_array = find_percentiles_all_data(current_data)      # This is for data without seasonality (e.g. anomalies)
+		    # Find percentiles
+                    if np.isnan(np.mean(current_data)) == False:
+                        if seasonality_bool:
+			    percentile_array = find_percentiles_single_month(current_data) # This is for data with seasonality
                         else:
-                            percentile_array = np.empty(n)
-                            percentile_array.fill(np.nan)
+                            percentile_array = percentiles_from_Weibull(current_data)      # This is for data without seasonality (e.g. anomalies)
+                    else:
+                        percentile_array = np.empty(n)
+                        percentile_array.fill(np.nan)
 
-			# Save to percentiles matrix
-			percentile_matrix[:,i,j] = percentile_array
+		    # Save to percentiles matrix
+		    percentile_matrix[:,i,j] = percentile_array
 			
 	return percentile_matrix
 
@@ -1142,20 +1199,19 @@ def find_clusters_displacements(centroid_lons, centroid_lats):
 
 	return total_displacement, end_points, displacements
 
-def monthdelta(d1, d2):
-	'''
-	This function calculates the difference in months between two dates.
-	'''
-	
-    	delta = 0
-    	while True:
-		mdays = monthrange(d1.year, d1.month)[1]
-        	d1 += timedelta(days=mdays)
-        	if d1 <= d2:
-            		delta += 1
-       		else:
-            		break
-    	return delta
+def diff_month(start_date, end_date):
+    '''
+    This function calcualtes the number of months between two dates.
+
+    Arguments:
+    - start_date: Datetime object with the start date
+    - end_date: Datetime object with the end date
+
+    Returns:
+    - Integer with the number of months between the two months.
+    '''
+    
+    return (end_date.year - start_date.year) * 12 + end_date.month - start_date.month
 
 def extract_tracks(cluster_data_dictionary):
 	'''
@@ -1181,7 +1237,7 @@ def extract_tracks(cluster_data_dictionary):
 		# Find cluster's beginning and end
 		cluster_start = cluster_data_dictionary[cluster_ID]['start']
 		cluster_end = cluster_data_dictionary[cluster_ID]['end']
-    		duration = monthdelta(cluster_start,cluster_end)+1
+    		duration = diff_month(cluster_start,cluster_end)+1
 	
 		# Initialize entries for current cluster
 		tracks_dictionary['cluster_count'] = nclusters
@@ -1310,74 +1366,3 @@ def Create_NETCDF_File(dims,file,var,var_info,data,tinitial):
 	f.variables[var][:] = data
 
 	return f
-
-#############################################################################################################
-############################################ MISCELLANEOUS TOOLS ############################################
-#############################################################################################################
-
-def save_clusters_data_matlab(tracks_dictionary, cluster_data_dictionary, save_path):
-	'''
-	This function taxes in the tracks dictionary calculated by the extract_tracks function and saves
-	files for each cluster in matlab format.
-	
-	Arguments:
-	- tracks_dictionary: Dictionary with information on the drought clusters centroid, area and intensity.
-	- cluster_data_dictionary: Dicionary with all of the drought clusters information.
-	'''
-	
-	# Import Python libraries
-	#import csv
-	from scipy.io import savemat
-	
-	# Number of clusters
-	nclusters = cluster_data_dictionary['cluster_count']
-
-	# Open csv file to save data
-	f = open(save_path + 'cluster_information.csv', 'w')
-	f.write('clusterID,start_date,end_date,duration(months),total_displacement(km),end_points(km)\n')
-
-	# Sweep through each of the clusters
-	for cluster in range(1, nclusters + 1): 
-		
-		# Load the information of start and end of the cluster
-		cluster_start_year = tracks_dictionary[cluster]['start_year']
-		cluster_end_year = tracks_dictionary[cluster]['end_year']
-		cluster_start_month = tracks_dictionary[cluster]['start_month']
-		cluster_end_month = tracks_dictionary[cluster]['end_month']
-
-		# Start and end dates
-		start_monthstr = "0"+str(cluster_start_month)
-		start_monthstr = start_monthstr[-2:]
-		end_monthstr = "0"+str(cluster_end_month)
-		end_monthstr = end_monthstr[-2:]
-
-		# Date
-		start_date = str(cluster_start_year) + start_monthstr
-		end_date = str(cluster_end_year) + end_monthstr
-		
-		# Load all other information of the cluster
-		duration = tracks_dictionary[cluster]['duration']
-		total_displacement = tracks_dictionary[cluster]['total_displacement']
-		end_points_distance = tracks_dictionary[cluster]['end_points']
-		centroid_lons = np.array(tracks_dictionary[cluster]['lons'])
-		centroid_lats = np.array(tracks_dictionary[cluster]['lats'])
-		areas = np.array(tracks_dictionary[cluster]['areas'])
-		intensities = np.array(tracks_dictionary[cluster]['intensities'])
-		
-		# File names
-		fname_duration = 'cluster_' + str(cluster) + '_duration.mat'
-		fname_start_date = 'cluster_' + str(cluster) + '_start-date.mat'
-		fname_end_date = 'cluster_' + str(cluster) + '_end-date.mat'
-		f.write(str(cluster) + ',' + start_date + ',' + end_date + ',' + str(duration) + ',' + str(total_displacement) + ',' + str(end_points_distance) + '\n')
-
-		# File names
-		fname_centroid_lon = 'cluster_' + str(cluster) + '_centroid-lons.mat'
-		fname_centroid_lat = 'cluster_' + str(cluster) + '_centroid-lats.mat'
-		fname_areas = 'cluster_' + str(cluster) + '_areas.mat'
-		fname_intensities = 'cluster_' + str(cluster) + '_intensities.mat'
-		
-		# Save each file		
-		savemat(save_path + fname_areas, {'vect':areas})
-		savemat(save_path + fname_centroid_lon, {'vect':centroid_lons})
-		savemat(save_path + fname_centroid_lat, {'vect':centroid_lats})
-		savemat(save_path + fname_intensities, {'vect':intensities})
