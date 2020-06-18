@@ -39,8 +39,8 @@ lons = f.variables['lon'][:]
 lats = f.variables['lat'][:]
 f.close()
 
-f = Dataset(prcp_path)
-et = f.variables['e'][:]
+f = Dataset(et_path)
+et = f.variables['et'][:]
 f.close()
 
 ##################################################################################
