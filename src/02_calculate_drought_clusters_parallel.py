@@ -9,7 +9,7 @@ Written by Julio E. Herrera Estrada, Ph.D.
 '''
 
 # Import libraries
-import pyyaml
+import yaml
 import numpy as np
 from mpi4py import MPI
 import cPickle as pickle
@@ -64,7 +64,7 @@ metric_var = definitions['metric_var']
 
 # Path where the drought clusters will be saved
 clusters_partial_path = definitions['clusters_partial_path']
-clusters_full_path = clusters_partial_path + '/' + dataset + '/' + region + '/' drought_metric + '/' + drought_threshold_name + '/'
+clusters_full_path = clusters_partial_path + '/' + dataset + '/' + region + '/' + drought_metric + '/' + drought_threshold_name + '/'
 
 # Threshold for minimum cluster area (km^2)
 minimum_area_threshold = definitions['minimum_area_threshold']

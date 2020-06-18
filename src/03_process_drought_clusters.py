@@ -9,7 +9,7 @@ Written by Julio E. Herrera Estrada, Ph.D.
 '''
 
 # Import Python libraries
-import pyyaml
+import yaml
 import numpy as np
 import cPickle as pickle
 from netCDF4 import Dataset
