@@ -17,39 +17,39 @@ from dateutil.relativedelta import relativedelta
 #############################################################################################################
 
 def calculate_anomalies_matrix(data_matrix):
-        '''
-        This function calculates monthly anomalies from the given 3D matrix. Assumes the data starts in January.
+    '''
+    This function calculates monthly anomalies from the given 3D matrix. Assumes the data starts in January.
 
-        Arguments:
-        - data_matrix = 3D NumPy array (time, lats, lons) with the data from which we want to calculate anomalies
+    Arguments:
+    - data_matrix = 3D NumPy array (time, lats, lons) with the data from which we want to calculate anomalies
 
-        Returns:
-        - anomalies = 3D NumPy array (time, lats, lons) with the calculated anomalies
-        '''
+    Returns:
+    - anomalies = 3D NumPy array (time, lats, lons) with the calculated anomalies
+    '''
 
-        # Dimensions of data
-        nt, nlats, nlons = data_matrix.shape
+    # Dimensions of data
+    nt, nlats, nlons = data_matrix.shape
 
-        # Initialize array to save cumulative anomalies
-        anomalies = np.zeros([nt, nlats, nlons])
+    # Initialize array to save cumulative anomalies
+    anomalies = np.zeros([nt, nlats, nlons])
         
-        # Calculate anomalies
-        month_idx = 0
-        for i in range(0, nt):
-            
-            # Index of current months
-            idx = np.arange(month_idx,nt,12)
+    # Calculate anomalies
+    month_idx = 0
+    for i in range(0, nt):
 
-            # Subtract monthly means from current value
-            anomalies[i,:,:] = data_matrix[i,:,:] - np.nanmean(data_matrix[idx,:,:], axis = 0)
+        # Index of current months
+        idx = np.arange(month_idx,nt,12)
 
-            # Update month index
-            if month_idx == 11: # December given start at 0
-                month_idx = 0
-            else:
-                month_idx = month_idx + 1
+        # Subtract monthly means from current value
+        anomalies[i,:,:] = data_matrix[i,:,:] - np.nanmean(data_matrix[idx,:,:], axis = 0)
 
-        return anomalies
+        # Update month index
+        if month_idx == 11: # December given start at 0
+            month_idx = 0
+        else:
+            month_idx = month_idx + 1
+
+    return anomalies
 
 def calculate_cumulative_anomalies_matrix(anomalies, window):
         '''
