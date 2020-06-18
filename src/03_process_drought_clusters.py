@@ -54,7 +54,7 @@ lon_var = definitions['lon_var']
 
 # Path where the drought clusters will be saved
 clusters_partial_path = definitions['clusters_partial_path']
-clusters_full_path = clusters_partial_path + '/' + dataset + '/' + region + '/' drought_metric + '/' + drought_threshold_name + '/'
+clusters_full_path = clusters_partial_path + '/' + dataset + '/' + region + '/' + drought_metric + '/' + drought_threshold_name + '/'
 
 ##################################################################################
 ####################### TRACK DROUGHT CLUSTERS THROUGH TIME ######################
