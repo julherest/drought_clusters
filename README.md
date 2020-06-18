@@ -12,6 +12,13 @@ The code is found under the `src` directory and contains the following files:
 
 For further information on the algorithm, please read the references provided in the **How to cite this code** and **References** sections.
 
+## Requirements
+The code has been optimized to work with Python 2.7 and requires the following Python libraries:
+- `numpy==1.18.5`
+- `netCDF4==1.5.3`
+- `python-dateutil==2.8.1`
+- `mpi4py==3.0.0`
+
 ## 1. Data pre-processing
 Prior to identifying and tracking drought clusters using this code, the user needs to create a NetCDF file that contains a 3D array (time, lat, lon) that contains the gridded, normalized drought metric to use. Further, the longitudinal coordinates must be given in the form (-180, 180) instead of (0, 360). 
 

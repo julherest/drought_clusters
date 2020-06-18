@@ -172,10 +172,10 @@ def calculate_percentiles_matrix(data_matrix, seasonality_bool):
 		    # Current grid cell's data
 		    current_data = data_matrix[:,i,j]
 
-		    # Find percentiles
+                    # Find percentiles
                     if np.isnan(np.mean(current_data)) == False:
                         if seasonality_bool:
-			    percentile_array = find_percentiles_single_month(current_data) # This is for data with seasonality
+                            percentile_array = find_percentiles_single_month(current_data) # This is for data with seasonality
                         else:
                             percentile_array = percentiles_from_Weibull(current_data)      # This is for data without seasonality (e.g. anomalies)
                     else:
@@ -290,13 +290,13 @@ def check_drought_in_surroundings(current_pixel, linked_indices, data_matrix, pe
 
 	Returns:
 	- surrounding_drought_pixels: list of pixels directly surrounding the current_pixel that are also under drought. 
-	'''
+        '''
 
         # Dimensions of matrix
         nlats, nlons = data_matrix.shape
 
-	# Array of surrounding indices under drought
-	surrounding_drought_pixels = []
+        # Array of surrounding indices under drought
+        surrounding_drought_pixels = []
 
 	# Individual coordinates of current pixel
 	n,m = current_pixel
@@ -312,8 +312,8 @@ def check_drought_in_surroundings(current_pixel, linked_indices, data_matrix, pe
                 elif y > nlons-1:
                     y = 0
  
-	    # If it is under drought, add it to the list
-	    if (x,y) in linked_indices:
+            # If it is under drought, add it to the list
+            if (x,y) in linked_indices:
 		    surrounding_drought_pixels.append((x,y))
 		    value = data_matrix[x,y]
         
@@ -1320,8 +1320,6 @@ def Create_NETCDF_File(dims,file,var,var_info,data,tinitial):
 	- f: netcdf file object created.  
 	'''
 	
-	import netCDF4 as netcdf
-
 	# Extract info
 	lons = dims['lons']
 	lats = dims['lats']
