@@ -94,55 +94,55 @@ resolution_lat = np.mean(lats[1:]-lats[:-1])
 # Function to carry out analysis in parallel. Each core is given a chunk of the time steps to analyze.
 def find_clusters(chunk):
 
-        # Length of the chunk
-        chunk_length = len(chunk)
+    # Length of the chunk
+    chunk_length = len(chunk)
 
-        # Repeat analysis for each time step within the assigned chunck
-        for i in range(0, chunk_length):
-    
-            # Current date
-	    current_date = start_date + relativedelta(months=int(chunk[i]))
+    # Repeat analysis for each time step within the assigned chunck
+    for i in range(0, chunk_length):
 
-            # STEP 1: GET DATA FOR THE CURRENT TIME STEP
-    	    current_data_slice = drought_metric[int(chunk[i]),:,:]
-	
-	    # STEP 2: APPLY MEDIAN FILTER TO THE TIME STEP IN EACH FIELD TO SMOOTH OUT NOISE
-	    filtered_slice = dclib.median_filter(current_data_slice)
+        # Current date
+        current_date = start_date + relativedelta(months=int(chunk[i]))
 
-	    # STEP 3: APPLY DROUGHT THRESHOLD DEFINITION (e.g. 20th percentile)
-	    droughts = dclib.filter_non_droughts(filtered_slice, drought_threshold)
-    
-	    # STEP 4: IDENTIFY DROUGHT CLUSTERS PER TIME STEP
-            print('Rank ' + str(rank+1) + ': Identifying clusters for time step ' + str(int(chunk[i])+1) + ' of ' + str(nsteps) + ' (' + str(i+1) + '/' + str(chunk_length) + ')...')
-	    cluster_count, cluster_dictionary = dclib.find_drought_clusters(droughts, lons, lats, resolution_lon, resolution_lat, periodic_bool)
+        # STEP 1: GET DATA FOR THE CURRENT TIME STEP
+        current_data_slice = drought_metric[int(chunk[i]),:,:]
 
-	    # STEP 5: FILTER DROUGHT CLUSTERS BY AREA AND IF THE CENTROID LIES IN THE SAHARA
-	    droughts, cluster_count, cluster_dictionary = dclib.filter_drought_clusters(droughts, cluster_count, cluster_dictionary, minimum_area_threshold)
+        # STEP 2: APPLY MEDIAN FILTER TO THE TIME STEP IN EACH FIELD TO SMOOTH OUT NOISE
+        filtered_slice = dclib.median_filter(current_data_slice)
 
-	    # STEP 6: SAVE THE DROUGHT CLUSTERS FOR CURRENT TIME STEP
-	
-	    # Paths and file names for saving data
-	    f_name_slice = clusters_full_path + 'cluster-matrix_' + str(current_date) + '.pck'
-	    f_name_dictionary = clusters_full_path + 'cluster-dictionary_' + str(current_date) + '.pck'
-	    f_name_count = clusters_full_path + 'cluster-count_' + str(current_date) + '.pck'
+        # STEP 3: APPLY DROUGHT THRESHOLD DEFINITION (e.g. 20th percentile)
+        droughts = dclib.filter_non_droughts(filtered_slice, drought_threshold)
 
-	    # Save the data in pickle format
-	    pickle.dump(droughts,open(f_name_slice,"wb"),pickle.HIGHEST_PROTOCOL)
-	    pickle.dump(cluster_dictionary,open(f_name_dictionary,"wb"),pickle.HIGHEST_PROTOCOL)
-	    pickle.dump(cluster_count,open(f_name_count,"wb"),pickle.HIGHEST_PROTOCOL)
-            print('Rank ' + str(rank+1) + ': Saved data for time step ' + str(int(chunk[i])+1) + ' of ' + str(nsteps) + ' (' + str(i+1) + '/' + str(chunk_length) + ').')
+        # STEP 4: IDENTIFY DROUGHT CLUSTERS PER TIME STEP
+        print('Rank ' + str(rank+1) + ': Identifying clusters for time step ' + str(int(chunk[i])+1) + ' of ' + str(nsteps) + ' (' + str(i+1) + '/' + str(chunk_length) + ')...')
+        cluster_count, cluster_dictionary = dclib.find_drought_clusters(droughts, lons, lats, resolution_lon, resolution_lat, periodic_bool)
 
-        return 
-    
+        # STEP 5: FILTER DROUGHT CLUSTERS BY AREA AND IF THE CENTROID LIES IN THE SAHARA
+        droughts, cluster_count, cluster_dictionary = dclib.filter_drought_clusters(droughts, cluster_count, cluster_dictionary, minimum_area_threshold)
+
+        # STEP 6: SAVE THE DROUGHT CLUSTERS FOR CURRENT TIME STEP
+
+        # Paths and file names for saving data
+        f_name_slice = clusters_full_path + 'cluster-matrix_' + str(current_date) + '.pck'
+        f_name_dictionary = clusters_full_path + 'cluster-dictionary_' + str(current_date) + '.pck'
+        f_name_count = clusters_full_path + 'cluster-count_' + str(current_date) + '.pck'
+
+        # Save the data in pickle format
+        pickle.dump(droughts,open(f_name_slice,"wb"),pickle.HIGHEST_PROTOCOL)
+        pickle.dump(cluster_dictionary,open(f_name_dictionary,"wb"),pickle.HIGHEST_PROTOCOL)
+        pickle.dump(cluster_count,open(f_name_count,"wb"),pickle.HIGHEST_PROTOCOL)
+        print('Rank ' + str(rank+1) + ': Saved data for time step ' + str(int(chunk[i])+1) + ' of ' + str(nsteps) + ' (' + str(i+1) + '/' + str(chunk_length) + ').')
+
+    return 
+
 # Number of steps for each processor
 offset = 0
 h = np.ceil(nsteps/np.float32(size-offset))
 
 # Number of steps that each process will be required to do
 if rank >= offset and rank < size-1:
-	chunk = np.arange((rank-offset)*h,(rank-offset)*h+h)
+    chunk = np.arange((rank-offset)*h,(rank-offset)*h+h)
 elif rank == size-1:
-	chunk = np.arange((rank-offset)*h,nsteps)
+    chunk = np.arange((rank-offset)*h,nsteps)
 
 # Identify drought clusters for the current chunk of data 
 find_clusters(chunk)
