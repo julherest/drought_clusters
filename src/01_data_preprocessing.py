@@ -23,7 +23,7 @@ import drought_clusters_utils as dclib
 
 # ** Definitions
 dataset = 'MERRA2'
-start_date = (1980, 1, 1)
+start_date = datetime(1980, 1, 1)
 
 # ** Full path with file name for monthly precipitation and evaporation NetCDF files
 prcp_path = ''
