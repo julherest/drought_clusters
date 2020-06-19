@@ -17,7 +17,7 @@ The following animation shows an example of a drought cluster identified using s
 ![Example cluster](clusters_movie.gif)
 
 <p align="center">
-  <img width="1200" height="800" src="clusters_movie.gif">
+  <img width="1000" height="600" src="clusters_movie.gif">
 </p>
 
 ## Requirements
