@@ -12,7 +12,7 @@ The code is found under the `src` directory and contains the following files:
 
 For further information on the algorithm, please read the references provided in the **How to cite this code** and **References** sections.
 
-The following animation shows an example of a drought cluster identified from soil moisture from CFSR data (Herrera-Estrada et al., 2017):
+The following animation shows an example of a drought cluster identified using soil moisture data from NCEP's Climate Forecast System Reanalysis (CFSR) (Herrera-Estrada et al., 2017):
 
 ![Example cluster](clusters_movie.gif)
 ## Requirements
