@@ -15,6 +15,10 @@ For further information on the algorithm, please read the references provided in
 The following animation shows an example of a drought cluster identified using soil moisture data from NCEP's Climate Forecast System Reanalysis (CFSR) (Herrera-Estrada et al., 2017):
 
 ![Example cluster](clusters_movie.gif)
+
+<p align="center">
+  <img width="400" height="400" src="clusters_movie.gif">
+</p>
 ## Requirements
 The code has been optimized to work with Python 2.7 and requires the following Python libraries:
 - `numpy==1.18.5`
