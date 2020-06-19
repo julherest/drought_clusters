@@ -15,7 +15,6 @@ For further information on the algorithm, please read the references provided in
 The following animation shows an example of a drought cluster identified from soil moisture from CFSR data (Herrera-Estrada et al., 2017):
 
 ![Example cluster](clusters_movie.gif)
-
 ## Requirements
 The code has been optimized to work with Python 2.7 and requires the following Python libraries:
 - `numpy==1.18.5`
