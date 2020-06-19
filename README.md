@@ -14,8 +14,6 @@ For further information on the algorithm, please read the references provided in
 
 The following animation shows an example of a drought cluster identified using soil moisture data from NCEP's Climate Forecast System Reanalysis (CFSR) (Herrera-Estrada et al., 2017):
 
-![Example cluster](clusters_movie.gif)
-
 <p align="center">
   <img width="900" height="650" src="clusters_movie.gif">
 </p>
