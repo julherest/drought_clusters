@@ -17,7 +17,7 @@ The following animation shows an example of a drought cluster identified using s
 ![Example cluster](clusters_movie.gif)
 
 <p align="center">
-  <img width="400" height="400" src="clusters_movie.gif">
+  <img width="1200" height="800" src="clusters_movie.gif">
 </p>
 ## Requirements
 The code has been optimized to work with Python 2.7 and requires the following Python libraries:
