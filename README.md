@@ -19,6 +19,7 @@ The following animation shows an example of a drought cluster identified using s
 <p align="center">
   <img width="1200" height="800" src="clusters_movie.gif">
 </p>
+
 ## Requirements
 The code has been optimized to work with Python 2.7 and requires the following Python libraries:
 - `numpy==1.18.5`
