@@ -44,7 +44,7 @@ To run this file on 4 processors, the user would time the following into the com
 
 The maximum number of processors that the user can use will be dictated by the processors available to the user in their computer or computer cluster.
 
-The code in `02_caculate_drought_clusters_parallel.py` will carry out the following operations for each time step:
+The code in `02_calculate_drought_clusters_parallel.py` will carry out the following operations for each time step:
 1. Extract the 2D array for the given time step
 2. Apply a median filter over the 2D array to smooth out noise
 3. Apply drougth threshold definition. As mentioned previously, this code was written to work with percentiles (e.g. of soil moisture) so a drought is definied by a percentile threshold (e.g. 20th percentile). If a user were to use this code on drought metrics such as SPI, PDSI, or SPEI, they will need to set the drought definition specific to those metrics (e.g. 0 for any negative anomaly or -1 to focus on more severe droughts). Since the drought clusters are identified in 2D first and connected later, the user is encouraged to pick a less strict drought definition at this stage (e.g. 20th percentile when using percentiles or -0.5 when using SPI, PDSI or SPEI) to improve the temporal connectivity of the drought clusters, in case there is some intermitent recovery of drought conditions.
