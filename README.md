@@ -40,7 +40,7 @@ The user can apply this clustering algorithm to other reanalysies datasets (e.g.
 Once the user has created the NetCDF file with the 3D array (time, lat, lon) containing the gridded and normalized drought metric, the user can run the `02_calculate_drought_clusters_parallel.py` file to identify the 2D drought clusters in every time step (we will join the drought clusters through time in the next step). This file has been designed to run in parallel using the `mpi4py` Python library, so the user must make sure that they have this library and required dependencies installed.
 
 To run this file on 4 processors, the user would time the following into the command line:
-`mpirun -np 4 python 02_caculate_drought_clusters_parallel.py`
+`mpirun -np 4 python 02_calculate_drought_clusters_parallel.py`
 
 The maximum number of processors that the user can use will be dictated by the processors available to the user in their computer or computer cluster.
 
