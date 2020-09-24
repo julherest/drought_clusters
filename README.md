@@ -81,11 +81,11 @@ Further, each `cluster_data_dictionary[cluster_ID]` entry also includes keys of 
 This code was written by Julio E. Herrera Estrada, PhD.
 
 To cite the use of this code, please use the following reference:
-- Herrera-Estrada, J. E., Satoh, Y., & Sheffield, J. (2017). Spatiotemporal dynamics of global drought. *Geophysical Research Letters*, **44**, 2254–2263. https://doi.org/10.1002/2016GL071768
+- Herrera-Estrada, J. E. and Diffenbaugh, N. S. (2020). Landfalling Droughts: Global tracking of moisture deficits from the oceans onto land. *Water Resources Research*, **56**, e2019WR026877. https://doi.org/10.1029/2019WR026877
 
 ## References of articles that have used this code
 - Herrera-Estrada, J. E., Satoh, Y., & Sheffield, J. (2017). Spatiotemporal dynamics of global drought. *Geophysical Research Letters*, **44**, 2254–2263. https://doi.org/10.1002/2016GL071768
-- Herrera-Estrada, J. E. and Diffenbaugh, N. S. Landfalling Droughts: Global tracking of moisture deficits from the oceans onto land. *Water Resources Research, under review*
+- Herrera-Estrada, J. E. and Diffenbaugh, N. S. (2020). Landfalling Droughts: Global tracking of moisture deficits from the oceans onto land. *Water Resources Research*, **56**, e2019WR026877. https://doi.org/10.1029/2019WR026877
 
 ## Questions and ideas
 I will do my best to reply to any questions that users may have on how to use this code, as well as develop further releases with improvements and expanded functionallity. If you have any questions or ideas, or would like to collaborate in the development of this code or studies based on it, please contact me (Julio) at `jherrera at alumni dot princeton dot edu`. 
