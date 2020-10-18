@@ -1331,7 +1331,7 @@ def Create_NETCDF_File(dims,file,var,var_info,data,tinitial):
 
   	#Prepare the netcdf file
   	# Create file
-  	f = netcdf.Dataset(file, 'w')
+  	f = Dataset(file, 'w')
 
   	# Define dimensions
   	f.createDimension('lon',nlon)
