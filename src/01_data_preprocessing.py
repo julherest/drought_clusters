@@ -1,4 +1,4 @@
-'''
+"""
 This script processes reanalysis data to be used in the clustering algorithm. The output is a 3D matrix of the percentiles
 of cumulative anomalies of precipitation minus evaporation.
 
@@ -6,7 +6,7 @@ Note that the "**" at the beginning of a comment show the lines where the user w
 either by writing the path to the file or by making sure the variable names correspond to those in the NetCDF file.
 
 Written by Julio E. Herrera Estrada, Ph.D.
-'''
+"""
 
 # Import Python libraries
 import numpy as np
@@ -22,25 +22,25 @@ import drought_clusters_utils as dclib
 ##################################################################################
 
 # ** Definitions
-dataset = 'MERRA2'
+dataset = "MERRA2"
 start_date = datetime(1980, 1, 1)
 
 # ** Full path with file name for monthly precipitation and evaporation NetCDF files
-prcp_path = ''
-et_path = ''
+prcp_path = ""
+et_path = ""
 
 # ** Full path with file name for the NetCDF file with the percentiels
-percentiles_path = ''
+percentiles_path = ""
 
 # ** Open NetCDF files containing the monthly precipitation ane evaporation from MERRA-2
 f = Dataset(prcp_path)
-prcp = f.variables['prcp'][:]
-lons = f.variables['lon'][:]
-lats = f.variables['lat'][:]
+prcp = f.variables["prcp"][:]
+lons = f.variables["lon"][:]
+lats = f.variables["lat"][:]
 f.close()
 
 f = Dataset(et_path)
-et = f.variables['et'][:]
+et = f.variables["et"][:]
 f.close()
 
 ##################################################################################
@@ -48,25 +48,38 @@ f.close()
 ##################################################################################
 
 # Calculate precipitation minus evaporation (P-E)
-pme = prcp-et
+pme = prcp - et
 
 # Calculate monthly anomalies of P-E
 anomalies = dclib.calculate_anomalies_matrix(pme)
 
 # Calculate cumulative anomalies of P-E over a given accumulation period
-accumulation_window = 12    # months
-cumulative_anomalies = dclib.calculate_cumulative_anomalies_matrix(anomalies, accumulation_window)
-new_start_date = start_date + relativedelta(years=1) 
+accumulation_window = 12  # months
+cumulative_anomalies = dclib.calculate_cumulative_anomalies_matrix(
+    anomalies, accumulation_window
+)
+new_start_date = start_date + relativedelta(years=1)
 
 # Calculate percentiles of cumulative anomalies of P-E
 seasonality_bool = False
-percentiles_matrix = dclib.calculate_percentiles_matrix(cumulative_anomalies, seasonality_bool)
+percentiles_matrix = dclib.calculate_percentiles_matrix(
+    cumulative_anomalies, seasonality_bool
+)
 
 # Information to save the percentiles_matrix
-units = 'percentiles'
-var_name_percentiles = 'percentiles'
-var_info = 'Percentiles of P-E cumulative anomalies from ' + dataset + '.'
+units = "percentiles"
+var_name_percentiles = "percentiles"
+var_info = "Percentiles of P-E cumulative anomalies from " + dataset + "."
 
-# Save percentiles matrix 
-dclib.save_netcdf_file(percentiles_matrix, lons, lats, units, var_name_percentiles, var_info,percentiles_path, new_start_date)
-print 'Done calculating and saving percentiles.'
+# Save percentiles matrix
+dclib.save_netcdf_file(
+    percentiles_matrix,
+    lons,
+    lats,
+    units,
+    var_name_percentiles,
+    var_info,
+    percentiles_path,
+    new_start_date,
+)
+print("Done calculating and saving percentiles.")
